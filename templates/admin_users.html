@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Users') }} · {{ _('Meeting Manager') }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col">
+    <h4 class="mb-0"><i class="bi bi-people"></i> {{ _('User management') }}</h4>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+{% endif %}
+{% if success %}
+<div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>{{ success }}</div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header"><h6 class="mb-0">{{ _('Registered users') }}</h6></div>
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0" style="font-size:0.875rem;">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>{{ _('E-mail') }}</th>
+          <th>{{ _('Role') }}</th>
+          <th>{{ _('Created') }}</th>
+          <th class="text-end">{{ _('Actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="text-muted">{{ u.id }}</td>
+          <td>
+            {{ u.email }}
+            {% if u.id | string == session_user_id %}
+            <span class="badge bg-secondary ms-1" style="font-size:0.7rem;">{{ _('You') }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_admin %}
+            <span class="badge" style="background:#4F46E5;">{{ _('Admin') }}</span>
+            {% else %}
+            <span class="badge bg-secondary">{{ _('User') }}</span>
+            {% endif %}
+          </td>
+          <td class="text-muted">{{ u.created_at or '—' }}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                    data-bs-target="#resetModal{{ u.id }}" title="{{ _('Change password') }}">
+              <i class="bi bi-key"></i>
+            </button>
+
+            <form method="POST" action="{{ url_for('admin_toggle_admin', user_id=u.id) }}" class="d-inline"
+                  data-confirm="{{ _('Change the role of %(email)s?', email=u.email) }}"
+                  onsubmit="return confirm(this.dataset.confirm)">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-primary" title="{{ _('Toggle admin role') }}">
+                <i class="bi bi-shield{% if u.is_admin %}-fill{% endif %}"></i>
+              </button>
+            </form>
+
+            <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}" class="d-inline"
+                  data-confirm="{{ _('Delete user %(email)s? This cannot be undone.', email=u.email) }}"
+                  onsubmit="return confirm(this.dataset.confirm)">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-danger" title="{{ _('Delete user') }}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% for u in users %}
+<div class="modal fade" id="resetModal{{ u.id }}" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">{{ _('New password') }}</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('admin_reset_password', user_id=u.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <p class="text-muted" style="font-size:0.8rem;">{{ u.email }}</p>
+          <input type="password" name="password" class="form-control" autocomplete="new-password"
+                 placeholder="{{ _('New password') }}" required minlength="{{ min_pw }}">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+          <button type="submit" class="btn btn-primary btn-sm">{{ _('Save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<div class="card">
+  <div class="card-header"><h6 class="mb-0"><i class="bi bi-person-plus"></i> {{ _('Create new user') }}</h6></div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('admin_create_user') }}" class="row g-3 align-items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-md-5">
+        <label class="form-label" style="font-size:0.875rem;">{{ _('E-mail') }}</label>
+        <input type="email" name="email" class="form-control" required placeholder="user@example.com">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" style="font-size:0.875rem;">{{ _('Password') }}</label>
+        <input type="password" name="password" class="form-control" required minlength="{{ min_pw }}"
+               autocomplete="new-password" placeholder="{{ _('At least %(n)d characters', n=min_pw) }}">
+      </div>
+      <div class="col-md-2 d-flex align-items-center" style="padding-top:1.5rem;">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="is_admin" id="isAdmin" value="1">
+          <label class="form-check-label" for="isAdmin" style="font-size:0.875rem;">{{ _('Admin') }}</label>
+        </div>
+      </div>
+      <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100" title="{{ _('Create new user') }}">
+          <i class="bi bi-plus-lg"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

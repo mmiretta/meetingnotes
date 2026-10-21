@@ -1,0 +1,28 @@
+# Runtime data: recordings, transcripts and databases. Never commit these.
+data/
+uploads/
+meetings/
+*.db
+*.sqlite
+*.sqlite3
+.secret_key
+
+# Secrets and certificates
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Build artefacts
+__pycache__/
+*.py[cod]
+*.mo
+.venv/
+venv/
+*.log
+*.bak*
+.DS_Store

@@ -1,0 +1,72 @@
+# MeetingNotes
+#
+#   docker compose up -d                                  # app only (bring your own Whisper/LLM)
+#   docker compose --profile whisper --profile ollama up -d   # everything, CPU
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml \
+#       --profile whisper --profile ollama up -d          # everything, NVIDIA GPU
+#
+# Settings are read from .env (copy .env.example).
+
+services:
+  app:
+    build: .
+    image: meetingnotes:${MEETINGNOTES_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      # Bound to localhost by default: put a TLS reverse proxy in front (docs/DEPLOY.md).
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-5002}:5002"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      DEMO_MODE: ${DEMO_MODE:-0}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-demo}
+      WHISPER_URL: ${WHISPER_URL:-http://whisper:9000/transcribe}
+      WHISPER_DEFAULT_MODEL: ${WHISPER_DEFAULT_MODEL:-base}
+      WHISPER_TIMEOUT: ${WHISPER_TIMEOUT:-3600}
+      LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SUMMARY_MODEL: ${SUMMARY_MODEL:-llama3.2:3b}
+      SUMMARY_LANGUAGES: ${SUMMARY_LANGUAGES:-en,es}
+      LLM_TIMEOUT: ${LLM_TIMEOUT:-900}
+      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.7}
+      JOB_CONCURRENCY: ${JOB_CONCURRENCY:-1}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-500}
+      DEFAULT_LANGUAGE: ${DEFAULT_LANGUAGE:-en}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
+      TRUSTED_AUTH_HEADER: ${TRUSTED_AUTH_HEADER:-}
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-127.0.0.1/32}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - meetingnotes-data:/data
+    extra_hosts:
+      # Lets the app reach Whisper/Ollama running directly on the Docker host.
+      - "host.docker.internal:host-gateway"
+
+  whisper:
+    profiles: ["whisper"]
+    build:
+      context: .
+      dockerfile: Dockerfile.whisper
+    image: meetingnotes-whisper:${MEETINGNOTES_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      WHISPER_MODEL: ${WHISPER_DEFAULT_MODEL:-base}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
+    volumes:
+      - whisper-models:/models
+
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+
+volumes:
+  meetingnotes-data:
+  whisper-models:
+  ollama-models:

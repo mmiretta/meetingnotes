@@ -1,0 +1,30 @@
+# NVIDIA GPU override for the optional Whisper and Ollama services.
+# Requires the NVIDIA Container Toolkit on the host.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml \
+#       --profile whisper --profile ollama up -d --build
+
+services:
+  whisper:
+    build:
+      args:
+        BASE_IMAGE: nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+    environment:
+      WHISPER_DEVICE: cuda
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8_float16}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

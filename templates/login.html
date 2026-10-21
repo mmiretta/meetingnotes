@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ _('Meeting Manager') }} · {{ _('Sign in') }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --primary-hover: #4338CA;
+            --background-color: #F9FAFB;
+            --border-color: #E5E7EB;
+        }
+
+        body {
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            padding: 2.5rem;
+        }
+
+        .login-logo {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .login-logo i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .subtitle {
+            color: #6B7280;
+            font-size: 0.875rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .form-control {
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            font-weight: 500;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        .alert {
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .lang-switch {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .lang-switch select {
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="lang-switch">
+        <select class="form-select form-select-sm" aria-label="{{ _('Language') }}"
+                onchange="document.cookie='lang='+this.value+';path=/;max-age=31536000;samesite=lax';location.reload()">
+            {% for code, name in languages.items() %}
+            <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="login-card">
+        <div class="login-logo">
+            <i class="bi bi-file-text"></i>
+        </div>
+        <h1>{{ _('Meeting Manager') }}</h1>
+        <p class="subtitle">{{ _('Enter your credentials to continue') }}</p>
+
+        {% if demo_password %}
+        <div class="alert alert-warning" role="note">
+            <i class="bi bi-info-circle me-1"></i>{{ _('Demo mode') }}:
+            <code>alice.moreno@acme.example</code> / <code>{{ demo_password }}</code>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <div class="mb-3">
+                <label for="email" class="form-label">{{ _('E-mail') }}</label>
+                <input type="email" class="form-control" id="email" name="email"
+                       autocomplete="username" required autofocus
+                       placeholder="user@example.com">
+            </div>
+
+            <div class="mb-4">
+                <label for="password" class="form-label">{{ _('Password') }}</label>
+                <input type="password" class="form-control" id="password" name="password"
+                       autocomplete="current-password" required
+                       placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-box-arrow-in-right me-1"></i> {{ _('Sign in') }}
+            </button>
+        </form>
+    </div>
+</body>
+</html>

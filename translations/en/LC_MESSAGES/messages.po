@@ -1,0 +1,602 @@
+# English translations for MeetingNotes.
+# Copyright (C) 2026 Mariano Miretta
+# This file is distributed under the same license as the MeetingNotes project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: MeetingNotes 1.0.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-21 02:36+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.10.3\n"
+
+#: app.py
+msgid "Tiny (fastest, least accurate)"
+msgstr ""
+
+#: app.py
+msgid "Base (good balance)"
+msgstr ""
+
+#: app.py
+msgid "Large v3 (most accurate, slowest)"
+msgstr ""
+
+#: app.py
+msgid "Auto-detect"
+msgstr ""
+
+#: app.py
+msgid "Incorrect e-mail or password."
+msgstr ""
+
+#: app.py
+msgid "The current password is incorrect."
+msgstr ""
+
+#: app.py
+#, python-format
+msgid "The new password must be at least %(n)d characters long."
+msgstr ""
+
+#: app.py
+msgid "The new passwords do not match."
+msgstr ""
+
+#: app.py
+msgid "Password updated."
+msgstr ""
+
+#: app.py
+msgid "E-mail and password are required."
+msgstr ""
+
+#: app.py
+#, python-format
+msgid "The password must be at least %(n)d characters long."
+msgstr ""
+
+#: app.py
+#, python-format
+msgid "User %(email)s already exists."
+msgstr ""
+
+#: app.py
+#, python-format
+msgid "User %(email)s created."
+msgstr ""
+
+#: app.py
+#, python-format
+msgid "Password of user #%(id)d updated."
+msgstr ""
+
+#: app.py
+msgid "You cannot remove your own admin role."
+msgstr ""
+
+#: app.py
+msgid "You cannot delete your own account."
+msgstr ""
+
+#: app.py templates/base.html templates/index.html templates/new_meeting.html
+msgid "New Meeting"
+msgstr ""
+
+#: app.py
+msgid "No audio file provided"
+msgstr ""
+
+#: app.py
+msgid "No file selected"
+msgstr ""
+
+#: app.py templates/new_meeting.html
+msgid "Error creating meeting"
+msgstr ""
+
+#: app.py
+msgid "The meeting is still being processed"
+msgstr ""
+
+#: app.py
+msgid "Tags must be a list"
+msgstr ""
+
+#: app.py
+msgid "Invalid data"
+msgstr ""
+
+#: app.py
+msgid "Tag not found"
+msgstr ""
+
+#: app.py
+msgid "Transcription already in progress"
+msgstr ""
+
+#: app.py
+msgid "The meeting is already transcribed"
+msgstr ""
+
+#: app.py templates/meeting_detail.html
+msgid "No audio file available"
+msgstr ""
+
+#: app.py
+msgid "Invalid model"
+msgstr ""
+
+#: app.py templates/meeting_detail.html
+msgid "Transcription failed. Check the server logs."
+msgstr ""
+
+#: app.py templates/meeting_detail.html
+msgid "No transcription available"
+msgstr ""
+
+#: app.py
+msgid "File too large"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Users"
+msgstr ""
+
+#: templates/admin_users.html templates/base.html templates/error.html templates/index.html
+#: templates/login.html templates/meeting_detail.html templates/profile.html
+msgid "Meeting Manager"
+msgstr ""
+
+#: templates/admin_users.html templates/base.html
+msgid "User management"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Registered users"
+msgstr ""
+
+#: templates/admin_users.html templates/login.html
+msgid "E-mail"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Role"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Created"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Actions"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "You"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Admin"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "User"
+msgstr ""
+
+#: templates/admin_users.html templates/profile.html
+msgid "Change password"
+msgstr ""
+
+#: templates/admin_users.html
+#, python-format
+msgid "Change the role of %(email)s?"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Toggle admin role"
+msgstr ""
+
+#: templates/admin_users.html
+#, python-format
+msgid "Delete user %(email)s? This cannot be undone."
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Delete user"
+msgstr ""
+
+#: templates/admin_users.html templates/profile.html
+msgid "New password"
+msgstr ""
+
+#: templates/admin_users.html templates/meeting_detail.html templates/new_meeting.html
+msgid "Cancel"
+msgstr ""
+
+#: templates/admin_users.html templates/meeting_detail.html
+msgid "Save"
+msgstr ""
+
+#: templates/admin_users.html
+msgid "Create new user"
+msgstr ""
+
+#: templates/admin_users.html templates/login.html
+msgid "Password"
+msgstr ""
+
+#: templates/admin_users.html
+#, python-format
+msgid "At least %(n)d characters"
+msgstr ""
+
+#: templates/base.html
+msgid "Demo mode: all users, meetings and companies are fictional."
+msgstr ""
+
+#: templates/base.html templates/login.html
+msgid "Language"
+msgstr ""
+
+#: templates/base.html templates/error.html
+msgid "Home"
+msgstr ""
+
+#: templates/base.html templates/profile.html
+msgid "My profile"
+msgstr ""
+
+#: templates/base.html
+msgid "Sign out"
+msgstr ""
+
+#: templates/index.html
+msgid "Meetings"
+msgstr ""
+
+#: templates/index.html
+msgid "Search meetings..."
+msgstr ""
+
+#: templates/index.html
+msgid "Clear search"
+msgstr ""
+
+#: templates/index.html
+msgid "Results for"
+msgstr ""
+
+#: templates/index.html
+msgid "meeting(s) found"
+msgstr ""
+
+#: templates/index.html
+msgid "Filter by Tags"
+msgstr ""
+
+#: templates/index.html
+msgid "All"
+msgstr ""
+
+#: templates/index.html
+msgid "Delete tag"
+msgstr ""
+
+#: templates/index.html
+msgid "Today"
+msgstr ""
+
+#: templates/index.html
+msgid "Yesterday"
+msgstr ""
+
+#: templates/index.html
+msgid "This Week"
+msgstr ""
+
+#: templates/index.html
+msgid "Last Week"
+msgstr ""
+
+#: templates/index.html
+msgid "This Month"
+msgstr ""
+
+#: templates/index.html
+msgid "Older"
+msgstr ""
+
+#: templates/index.html templates/meeting_detail.html
+msgid "Processing..."
+msgstr ""
+
+#: templates/index.html templates/meeting_detail.html
+msgid "Transcribed"
+msgstr ""
+
+#: templates/index.html templates/meeting_detail.html
+msgid "Pending"
+msgstr ""
+
+#: templates/index.html
+msgid "words"
+msgstr ""
+
+#: templates/index.html
+msgid "View"
+msgstr ""
+
+#: templates/index.html templates/meeting_detail.html
+msgid "Delete Meeting"
+msgstr ""
+
+#: templates/index.html
+msgid "No meetings found"
+msgstr ""
+
+#: templates/index.html
+msgid "Create your first meeting to get started"
+msgstr ""
+
+#: templates/index.html templates/meeting_detail.html
+msgid "Are you sure you want to delete this meeting?"
+msgstr ""
+
+#: templates/index.html templates/meeting_detail.html
+msgid "Error deleting meeting"
+msgstr ""
+
+#: templates/index.html
+msgid "Delete this tag from all meetings?"
+msgstr ""
+
+#: templates/index.html
+msgid "Error removing tag"
+msgstr ""
+
+#: templates/login.html
+msgid "Sign in"
+msgstr ""
+
+#: templates/login.html
+msgid "Enter your credentials to continue"
+msgstr ""
+
+#: templates/login.html
+msgid "Demo mode"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Back"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Information"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Description:"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "No description available."
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Transcription:"
+msgstr ""
+
+#: templates/meeting_detail.html templates/new_meeting.html
+msgid "Summary Model"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Status:"
+msgstr ""
+
+#: templates/meeting_detail.html templates/new_meeting.html
+msgid "Tags"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Remove"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Add new tag"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Add"
+msgstr ""
+
+#: templates/meeting_detail.html templates/new_meeting.html
+msgid "Audio"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Transcription"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Summary"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Your browser does not support the audio element."
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Edit"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Reprocess"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Transcription in progress..."
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Start Transcription"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "The summary is being generated..."
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "No summary in this language yet"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Generate"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Reprocess Summary"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Select model for summary:"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "The current summaries will be replaced."
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Reprocess Transcription"
+msgstr ""
+
+#: templates/meeting_detail.html templates/new_meeting.html
+msgid "Transcription Model"
+msgstr ""
+
+#: templates/meeting_detail.html templates/new_meeting.html
+msgid "Audio Language"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "The current transcription and summary will be replaced."
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Error updating tags"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Error starting transcription"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Error reprocessing"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Changes saved"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Error saving changes"
+msgstr ""
+
+#: templates/meeting_detail.html
+msgid "Generating..."
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Title"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Description"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Separated by commas"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Example: work, important, follow-up"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Larger models are more accurate but slower"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Auto-detect works well; explicit language improves accuracy"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Language model used to write the summary"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Record"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Upload"
+msgstr ""
+
+#: templates/new_meeting.html
+#, python-format
+msgid "Record in the browser or upload an audio file (max. %(n)d MB)."
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Recording..."
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Audio ready"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Duration:"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Create Meeting"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Processing audio..."
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Starting transcription..."
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Stop"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Error accessing microphone"
+msgstr ""
+
+#: templates/new_meeting.html
+msgid "Record or upload an audio file first"
+msgstr ""
+
+#: templates/profile.html
+msgid "Current password"
+msgstr ""
+
+#: templates/profile.html
+msgid "Confirm new password"
+msgstr ""
+

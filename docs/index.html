@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MeetingNotes</title>
+<meta name="description" content="Self-hosted meeting recorder: Whisper transcription and local LLM summaries.">
+<style>
+  :root {
+    --bg: #F9FAFB; --fg: #111827; --muted: #4B5563; --card: #FFFFFF; --border: #E5E7EB;
+    --accent: #4F46E5; --accent-2: #4338CA; --code: #F3F4F6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0F1117; --fg: #E5E7EB; --muted: #9CA3AF; --card: #171A23; --border: #2A2F3A;
+            --accent: #818CF8; --accent-2: #6366F1; --code: #1F2330; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); line-height: 1.6;
+         font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  a { color: var(--accent); }
+  header { background: linear-gradient(135deg, #4F46E5, #4338CA); color: #fff; padding: 4rem 1rem 3rem; text-align: center; }
+  header h1 { margin: 0 0 .5rem; font-size: clamp(2rem, 5vw, 3rem); }
+  header p { margin: 0 auto; max-width: 42rem; font-size: 1.15rem; opacity: .92; }
+  .buttons { margin-top: 1.75rem; display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: .7rem 1.3rem; border-radius: .6rem; text-decoration: none; font-weight: 600; }
+  .btn.primary { background: #fff; color: #4338CA; }
+  .btn.ghost { border: 1px solid rgba(255,255,255,.6); color: #fff; }
+  main { max-width: 68rem; margin: 0 auto; padding: 0 1rem 4rem; }
+  .hero-shot { margin: -1.5rem auto 3rem; max-width: 60rem; }
+  img { max-width: 100%; height: auto; display: block; border-radius: .75rem; border: 1px solid var(--border);
+        box-shadow: 0 10px 25px -10px rgba(0,0,0,.25); }
+  h2 { margin-top: 3rem; }
+  .grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: .9rem; padding: 1.25rem; }
+  .card h3 { margin: 0 0 .35rem; font-size: 1.05rem; }
+  .card p { margin: 0; color: var(--muted); }
+  .shots { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
+  figure { margin: 0; }
+  figcaption { color: var(--muted); font-size: .9rem; margin-top: .5rem; text-align: center; }
+  pre { background: var(--code); border: 1px solid var(--border); border-radius: .6rem; padding: 1rem;
+        overflow-x: auto; font-size: .9rem; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .flow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: center; margin: 1.5rem 0; }
+  .flow span { background: var(--card); border: 1px solid var(--border); border-radius: .5rem; padding: .5rem .8rem; }
+  .flow b { color: var(--muted); font-weight: 400; }
+  footer { text-align: center; color: var(--muted); font-size: .9rem; padding: 2rem 1rem; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<header>
+  <h1>MeetingNotes</h1>
+  <p>Record or upload a meeting and get a transcript and a structured summary, on your own hardware.
+     Whisper for speech-to-text, a local LLM for the summary, nothing sent to third parties.</p>
+  <div class="buttons">
+    <a class="btn primary" href="https://github.com/mmiretta/meetingnotes">View on GitHub</a>
+    <a class="btn ghost" href="https://github.com/mmiretta/meetingnotes/blob/main/docs/DEPLOY.md">Deployment guide</a>
+  </div>
+</header>
+
+<main>
+  <div class="hero-shot">
+    <img src="screenshots/02-meetings.png" alt="List of meetings grouped by date, with tags and status" width="1280" height="860">
+  </div>
+
+  <div class="flow" aria-label="Processing pipeline">
+    <span>Record / upload</span><b>&rarr;</b><span>Whisper transcript</span><b>&rarr;</b>
+    <span>LLM summary (EN + ES)</span><b>&rarr;</b><span>Edit, tag, search</span>
+  </div>
+
+  <h2>Features</h2>
+  <div class="grid">
+    <div class="card"><h3>Record in the browser</h3><p>Or upload MP3, WAV, M4A, OGG, FLAC and WebM files of any length.</p></div>
+    <div class="card"><h3>Whisper transcription</h3><p>faster-whisper, CPU or NVIDIA GPU, from tiny to large-v3, with language auto-detection.</p></div>
+    <div class="card"><h3>Local LLM summaries</h3><p>Topics, decisions, owners and next steps, written by any Ollama model or OpenAI-compatible API.</p></div>
+    <div class="card"><h3>Edit and reprocess</h3><p>Fix a transcript, rewrite a summary, or rerun either one with a bigger model.</p></div>
+    <div class="card"><h3>Tags and search</h3><p>Full-text search over transcripts and summaries, tag filters, timeline by date.</p></div>
+    <div class="card"><h3>Multi-user</h3><p>Private storage per user, admin user management, optional SSO through your reverse proxy.</p></div>
+  </div>
+
+  <h2>Screenshots</h2>
+  <div class="shots">
+    <figure><img src="screenshots/07-summary.png" alt="Meeting summary" loading="lazy"><figcaption>Summary written by a local 4B model</figcaption></figure>
+    <figure><img src="screenshots/06-transcript.png" alt="Transcript" loading="lazy"><figcaption>Whisper transcript</figcaption></figure>
+    <figure><img src="screenshots/04-new-meeting.png" alt="New meeting form" loading="lazy"><figcaption>Record or upload</figcaption></figure>
+    <figure><img src="screenshots/03-search.png" alt="Search results" loading="lazy"><figcaption>Full-text search</figcaption></figure>
+    <figure><img src="screenshots/08-admin-users.png" alt="User management" loading="lazy"><figcaption>User management</figcaption></figure>
+    <figure><img src="screenshots/10-spanish.png" alt="Spanish interface" loading="lazy"><figcaption>English and Spanish UI</figcaption></figure>
+  </div>
+  <p style="color:var(--muted);font-size:.9rem">Screenshots from demo mode. Acme Corp and all people shown are fictional; the sample recording is synthetic speech.</p>
+
+  <h2>Try it</h2>
+<pre><code>git clone https://github.com/mmiretta/meetingnotes.git
+cd meetingnotes
+DEMO_MODE=1 docker compose up -d --build
+# open http://127.0.0.1:5002 and sign in as alice.moreno@acme.example / demo</code></pre>
+  <p>Full stack with Whisper and Ollama:</p>
+<pre><code>cp .env.example .env      # set SECRET_KEY, ADMIN_EMAIL, ADMIN_PASSWORD
+docker compose --profile whisper --profile ollama up -d --build
+docker compose exec ollama ollama pull llama3.2:3b</code></pre>
+</main>
+
+<footer>
+  MeetingNotes is open source under the <a href="https://github.com/mmiretta/meetingnotes/blob/main/LICENSE">MIT License</a>.
+  This page uses no cookies, trackers or external resources.
+</footer>
+</body>
+</html>

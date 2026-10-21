@@ -1,0 +1,6 @@
+flask>=3.0,<4
+flask-babel>=4.0,<5
+gunicorn>=22,<24
+markdown>=3.5,<4
+pydub>=0.25,<0.26
+requests>=2.31,<3

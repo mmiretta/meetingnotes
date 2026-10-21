@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ _('My profile') }} · {{ _('Meeting Manager') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-gear"></i> {{ _('My profile') }}</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-4" style="font-size:0.875rem;">
+          <i class="bi bi-person-circle me-1"></i> {{ current_user_email }}
+        </p>
+
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-circle me-1"></i>{{ error }}
+        </div>
+        {% endif %}
+        {% if success %}
+        <div class="alert alert-success" role="alert">
+          <i class="bi bi-check-circle me-1"></i>{{ success }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('profile') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label" style="font-size:0.875rem;">{{ _('Current password') }}</label>
+            <input type="password" name="current_password" class="form-control"
+                   autocomplete="current-password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="font-size:0.875rem;">{{ _('New password') }}</label>
+            <input type="password" name="new_password" class="form-control"
+                   autocomplete="new-password" required minlength="{{ min_pw }}">
+          </div>
+          <div class="mb-4">
+            <label class="form-label" style="font-size:0.875rem;">{{ _('Confirm new password') }}</label>
+            <input type="password" name="confirm_password" class="form-control"
+                   autocomplete="new-password" required minlength="{{ min_pw }}">
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-shield-lock me-1"></i> {{ _('Change password') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('New Meeting') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-plus-circle"></i> {{ _('New Meeting') }}</h4>
+            </div>
+            <div class="card-body">
+                <form id="meetingForm" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="title" class="form-label">{{ _('Title') }}</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label">{{ _('Description') }}</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="tags" class="form-label">{{ _('Tags') }}</label>
+                        <input type="text" class="form-control" id="tags" name="tags" placeholder="{{ _('Separated by commas') }}">
+                        <div class="form-text">{{ _('Example: work, important, follow-up') }}</div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="whisper_model" class="form-label">{{ _('Transcription Model') }}</label>
+                            <select class="form-select" id="whisper_model" name="model">
+                                {% for model_id, model_label in whisper_models %}
+                                <option value="{{ model_id }}" {% if model_id == whisper_default %}selected{% endif %}>
+                                    {{ model_label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">{{ _('Larger models are more accurate but slower') }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="transcription_language" class="form-label">{{ _('Audio Language') }}</label>
+                            <select class="form-select" id="transcription_language" name="transcription_language">
+                                {% for lang_code, lang_name in whisper_languages %}
+                                <option value="{{ lang_code }}" {% if lang_code == 'auto' %}selected{% endif %}>
+                                    {{ lang_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">{{ _('Auto-detect works well; explicit language improves accuracy') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="summary_model" class="form-label">{{ _('Summary Model') }}</label>
+                            <select class="form-select" id="summary_model" name="summary_model">
+                                {% for model_id, model in summary_models.items() %}
+                                <option value="{{ model_id }}" {% if model_id == summary_default %}selected{% endif %}>{{ model.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">{{ _('Language model used to write the summary') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">{{ _('Audio') }}</label>
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-primary" id="recordButton">
+                                <i class="bi bi-mic"></i> {{ _('Record') }}
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="uploadButton">
+                                <i class="bi bi-upload"></i> {{ _('Upload') }}
+                            </button>
+                        </div>
+                        <input type="file" id="audioFile" name="audio" accept="audio/*,video/mp4,video/webm" style="display: none;">
+                        <div class="form-text">{{ _('Record in the browser or upload an audio file (max. %(n)d MB).', n=max_upload_mb) }}</div>
+                        <div id="recordingStatus" class="mt-2" style="display: none;">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                <span>{{ _('Recording...') }}</span>
+                            </div>
+                        </div>
+                        <div id="recordingSaved" class="mt-2" style="display: none;">
+                            <div class="d-flex align-items-center gap-2 text-success">
+                                <i class="bi bi-check-circle"></i>
+                                <span>{{ _('Audio ready') }}:</span> <span id="audioName" class="text-muted"></span>
+                            </div>
+                        </div>
+                        <div id="duration" class="mt-2" style="display: none;">
+                            <span>{{ _('Duration:') }}</span>
+                            <span id="durationValue">00:00</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ url_for('index') }}'">
+                            <i class="bi bi-x-circle"></i> {{ _('Cancel') }}
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                            <i class="bi bi-plus-circle"></i> {{ _('Create Meeting') }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Processing modal -->
+<div class="modal fade" id="processingModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <h5 class="mb-3">{{ _('Processing audio...') }}</h5>
+                <p class="text-muted mb-0">{{ _('Starting transcription...') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let mediaRecorder = null;
+let audioChunks = [];
+let startTime;
+let timerInterval;
+
+// Pick the best recording format supported by this browser
+function getBestMimeType() {
+    const candidates = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/ogg',
+        'audio/mp4',
+    ];
+    return candidates.find(t => MediaRecorder.isTypeSupported(t)) || '';
+}
+
+document.getElementById('recordButton').addEventListener('click', async () => {
+    const button = document.getElementById('recordButton');
+
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        // Stop recording; onstop fires after stop()
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+
+        button.innerHTML = '<i class="bi bi-mic"></i> {{ _("Record") }}';
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-primary');
+        document.getElementById('recordingStatus').style.display = 'none';
+        document.getElementById('duration').style.display = 'block';
+        clearInterval(timerInterval);
+    } else {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000 }
+            });
+            const mimeType = getBestMimeType();
+            mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const finalMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
+                const ext = finalMime.includes('ogg') ? 'ogg' : finalMime.includes('mp4') ? 'mp4' : 'webm';
+                const audioBlob = new Blob(audioChunks, { type: finalMime });
+                const audioFile = new File([audioBlob], `recording.${ext}`, { type: finalMime });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(audioFile);
+                document.getElementById('audioFile').files = dataTransfer.files;
+                document.getElementById('audioName').textContent = audioFile.name;
+                document.getElementById('recordingSaved').style.display = 'block';
+            };
+
+            mediaRecorder.start(250);  // a chunk every 250 ms, so short recordings are not lost
+            startTime = Date.now();
+            updateDuration();
+            timerInterval = setInterval(updateDuration, 1000);
+
+            button.innerHTML = '<i class="bi bi-stop-circle"></i> {{ _("Stop") }}';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-danger');
+            document.getElementById('recordingStatus').style.display = 'block';
+            document.getElementById('recordingSaved').style.display = 'none';
+
+        } catch (err) {
+            console.error('Error accessing microphone:', err);
+            showToast({{ _("Error accessing microphone")|tojson }} + ': ' + err.message, 'error');
+        }
+    }
+});
+
+document.getElementById('uploadButton').addEventListener('click', () => {
+    document.getElementById('audioFile').click();
+});
+
+document.getElementById('audioFile').addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        document.getElementById('audioName').textContent = e.target.files[0].name;
+        document.getElementById('recordingSaved').style.display = 'block';
+        document.getElementById('duration').style.display = 'none';
+    }
+});
+
+function updateDuration() {
+    const duration = Math.floor((Date.now() - startTime) / 1000);
+    const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
+    const seconds = (duration % 60).toString().padStart(2, '0');
+    document.getElementById('durationValue').textContent = `${minutes}:${seconds}`;
+}
+
+document.getElementById('meetingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    if (!document.getElementById('audioFile').files.length) {
+        showToast({{ _("Record or upload an audio file first")|tojson }}, 'error');
+        return;
+    }
+    const submitButton = document.getElementById('submitButton');
+    submitButton.disabled = true;
+
+    const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+    processingModal.show();
+
+    try {
+        const response = await fetch('{{ url_for("new_meeting") }}', {
+            method: 'POST',
+            body: formData
+        });
+    
+        const data = await response.json();
+    
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            showToast(data.error || {{ _("Error creating meeting")|tojson }}, 'error');
+            submitButton.disabled = false;
+            processingModal.hide();
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast({{ _("Error creating meeting")|tojson }}, 'error');
+        submitButton.disabled = false;
+        processingModal.hide();
+    }
+});
+</script>
+{% endblock %} 

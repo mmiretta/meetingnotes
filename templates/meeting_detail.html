@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+
+{% block title %}{{ meeting.title }} · {{ _('Meeting Manager') }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0"><i class="bi bi-file-text"></i> {{ meeting.title }}</h4>
+                    <small class="text-muted">{{ meeting.date }}</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-primary" href="{{ url_for('index') }}">
+                        <i class="bi bi-arrow-left"></i> {{ _('Back') }}
+                    </a>
+                    <button class="btn btn-outline-danger" onclick="deleteMeeting()">
+                        <i class="bi bi-trash"></i> {{ _('Delete Meeting') }}
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5 class="mb-3">{{ _('Information') }}</h5>
+                        <div class="mb-3">
+                            <label class="text-muted">{{ _('Description:') }}</label>
+                            <p class="mb-0">{{ meeting.description or _('No description available.') }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted">{{ _('Transcription:') }}</label>
+                            <p class="mb-0">
+                                <i class="bi bi-lightning-charge-fill text-warning"></i>
+                                Whisper <strong>{{ meeting.model or 'base' }}</strong>
+                                {% if meeting.transcription_language and meeting.transcription_language != 'auto' %}
+                                · {{ meeting.transcription_language }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% if meeting.summary_model %}
+                        <div class="mb-3">
+                            <label class="text-muted">{{ _('Summary Model') }}:</label>
+                            <p class="mb-0"><i class="bi bi-cpu"></i> {{ meeting.summary_model }}</p>
+                        </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label class="text-muted">{{ _('Status:') }}</label>
+                            <p class="mb-0">
+                                {% if meeting.is_transcribing %}
+                                <span class="badge bg-warning"><span class="spinner-border spinner-border-sm me-1"></span>{{ _('Processing...') }}</span>
+                                {% elif meeting.transcription %}
+                                <span class="badge bg-success">{{ _('Transcribed') }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ _('Pending') }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="mb-3">{{ _('Tags') }}</h5>
+                        <div id="tagsContainer" class="mb-3">
+                            {% for tag in meeting.tags %}
+                            <span class="tag tag-color-{{ loop.index0 % 10 }}" data-tag="{{ tag }}">
+                                {{ tag }}
+                                <button type="button" class="btn-close btn-close-white ms-2" aria-label="{{ _('Remove') }}"
+                                        data-tag="{{ tag }}" onclick="removeMeetingTag(this.dataset.tag)"></button>
+                            </span>
+                            {% endfor %}
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="newTag" placeholder="{{ _('Add new tag') }}"
+                                   onkeydown="if (event.key === 'Enter') addTag()">
+                            <button class="btn btn-primary" onclick="addTag()">
+                                <i class="bi bi-plus"></i> {{ _('Add') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <ul class="nav nav-tabs mb-4" id="contentTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if not meeting.transcription %}active{% endif %}" id="audio-tab" data-bs-toggle="tab" data-bs-target="#audio" type="button" role="tab">
+                                    <i class="bi bi-music-note"></i> {{ _('Audio') }}
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="transcription-tab" data-bs-toggle="tab" data-bs-target="#transcription" type="button" role="tab">
+                                    <i class="bi bi-file-text"></i> {{ _('Transcription') }}
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if meeting.transcription %}active{% endif %}" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">
+                                    <i class="bi bi-journal-text"></i> {{ _('Summary') }}
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane fade {% if not meeting.transcription %}show active{% endif %}" id="audio" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-body">
+                                        {% if meeting.audio_path %}
+                                        <audio controls preload="metadata" class="w-100" src="{{ url_for('get_meeting_audio', meeting_id=meeting.id) }}">
+                                            {{ _('Your browser does not support the audio element.') }}
+                                        </audio>
+                                        {% else %}
+                                        <p class="text-muted mb-0">{{ _('No audio file available') }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade" id="transcription" role="tabpanel">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">{{ _('Transcription') }}</h5>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-outline-primary" onclick="editTranscription()" {% if not meeting.transcription %}disabled{% endif %}>
+                                            <i class="bi bi-pencil"></i> {{ _('Edit') }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="reprocessTranscription()" {% if meeting.is_transcribing or not meeting.audio_path %}disabled{% endif %}>
+                                            <i class="bi bi-arrow-repeat"></i> {{ _('Reprocess') }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="transcription-content" class="transcription-container">
+                                    {% if meeting.transcription %}
+                                        {{ meeting.transcription_html }}
+                                    {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-file-earmark-text display-5 text-muted"></i>
+                                            {% if meeting.is_transcribing %}
+                                            <p class="text-muted mt-3">{{ _('Transcription in progress...') }}</p>
+                                            {% else %}
+                                            <p class="text-muted mt-3">{{ _('No transcription available') }}</p>
+                                            {% if meeting.audio_path %}
+                                            <button class="btn btn-primary" onclick="startTranscription()">
+                                                <i class="bi bi-play-fill"></i> {{ _('Start Transcription') }}
+                                            </button>
+                                            {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div id="transcription-edit" class="d-none">
+                                    <textarea id="transcription-text" class="form-control" rows="15">{{ meeting.transcription or '' }}</textarea>
+                                    <div class="mt-3">
+                                        <button class="btn btn-primary" onclick="saveTranscription()">
+                                            <i class="bi bi-save"></i> {{ _('Save') }}
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="cancelEdit()">
+                                            <i class="bi bi-x"></i> {{ _('Cancel') }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane fade {% if meeting.transcription %}show active{% endif %}" id="summary" role="tabpanel">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <h5 class="mb-0">{{ _('Summary') }}</h5>
+                                                <div class="btn-group btn-group-sm" role="group" id="lang-toggle">
+                                                    <button type="button" class="btn btn-outline-primary" id="btn-lang-en" onclick="switchLang('en')">EN</button>
+                                                    <button type="button" class="btn btn-outline-primary" id="btn-lang-es" onclick="switchLang('es')">ES</button>
+                                                </div>
+                                            </div>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-outline-primary" onclick="editSummary()" {% if meeting.is_transcribing %}disabled{% endif %}>
+                                                    <i class="bi bi-pencil"></i> {{ _('Edit') }}
+                                                </button>
+                                                <button type="button" class="btn btn-outline-primary" onclick="reprocessSummary()" {% if meeting.is_transcribing or not meeting.transcription %}disabled{% endif %}>
+                                                    <i class="bi bi-arrow-repeat"></i> {{ _('Reprocess') }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="summary-content" class="summary-container">
+                                            {% for code, has, html_ in [('en', meeting.summary_en, meeting.summary_en_html), ('es', meeting.summary_es or meeting.summary, meeting.summary_es_html)] %}
+                                            <div id="summary-{{ code }}" class="summary-lang" style="display:none">
+                                                {% if has %}
+                                                    {{ html_ }}
+                                                {% else %}
+                                                    <div class="text-center py-5">
+                                                        <i class="bi bi-journal-text display-5 text-muted"></i>
+                                                        {% if meeting.is_transcribing %}
+                                                        <p class="text-muted mt-3">{{ _('The summary is being generated...') }}</p>
+                                                        {% else %}
+                                                        <p class="text-muted mt-3">{{ _('No summary in this language yet') }}</p>
+                                                        {% if meeting.transcription %}
+                                                        <button class="btn btn-primary btn-sm" onclick="generateLang('{{ code }}', this)">
+                                                            <i class="bi bi-translate"></i> {{ _('Generate') }}
+                                                        </button>
+                                                        {% endif %}
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        <div id="summary-edit" class="d-none">
+                                            <textarea id="summary-text" class="form-control" rows="15"></textarea>
+                                            <div class="mt-3">
+                                                <button class="btn btn-primary" onclick="saveSummary()">
+                                                    <i class="bi bi-save"></i> {{ _('Save') }}
+                                                </button>
+                                                <button class="btn btn-secondary" onclick="cancelSummaryEdit()">
+                                                    <i class="bi bi-x"></i> {{ _('Cancel') }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reprocess summary -->
+<div class="modal fade" id="reprocessSummaryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Reprocess Summary') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="summaryModel" class="form-label">{{ _('Select model for summary:') }}</label>
+                    <select class="form-select" id="summaryModel">
+                        {% for model_id, model in summary_models.items() %}
+                        <option value="{{ model_id }}" {% if model_id == summary_default %}selected{% endif %}>{{ model.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p class="text-muted small mb-0">{{ _('The current summaries will be replaced.') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="confirmReprocessSummary()">{{ _('Reprocess') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reprocess transcription -->
+<div class="modal fade" id="reprocessTranscriptionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ _('Reprocess Transcription') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="reprocessModel" class="form-label small fw-semibold">{{ _('Transcription Model') }}</label>
+                    <select class="form-select form-select-sm" id="reprocessModel">
+                        {% for model_id, model_label in whisper_models %}
+                        <option value="{{ model_id }}" {% if model_id == (meeting.model or 'base') %}selected{% endif %}>
+                            {{ model_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="reprocessLanguage" class="form-label small fw-semibold">{{ _('Audio Language') }}</label>
+                    <select class="form-select form-select-sm" id="reprocessLanguage">
+                        {% for lang_code, lang_name in whisper_languages %}
+                        <option value="{{ lang_code }}" {% if lang_code == (meeting.transcription_language or 'auto') %}selected{% endif %}>
+                            {{ lang_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <p class="text-muted small mb-0">{{ _('The current transcription and summary will be replaced.') }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ _('Cancel') }}</button>
+                <button type="button" class="btn btn-primary" onclick="confirmReprocessTranscription()">{{ _('Reprocess') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const MEETING = {
+    tags: {{ meeting.tags | tojson }},
+    summaries: {{ {'en': meeting.summary_en or '', 'es': meeting.summary_es or meeting.summary or ''} | tojson }},
+    processing: {{ (meeting.is_transcribing|int > 0) | tojson }},
+    urls: {
+        tags: {{ url_for('update_meeting_tags', meeting_id=meeting.id) | tojson }},
+        del: {{ url_for('delete_meeting', meeting_id=meeting.id) | tojson }},
+        index: {{ url_for('index') | tojson }},
+        transcribe: {{ url_for('transcribe_meeting', meeting_id=meeting.id) | tojson }},
+        reprocessSummary: {{ url_for('reprocess_summary', meeting_id=meeting.id) | tojson }},
+        reprocessTranscription: {{ url_for('reprocess_transcription', meeting_id=meeting.id) | tojson }},
+        status: {{ url_for('check_transcription_status', meeting_id=meeting.id) | tojson }},
+        transcription: {{ url_for('update_transcription', meeting_id=meeting.id) | tojson }},
+        summary: {{ url_for('update_summary', meeting_id=meeting.id) | tojson }},
+    },
+};
+const MSG = {{ {
+    "confirmDelete": _("Are you sure you want to delete this meeting?"),
+    "deleteError": _("Error deleting meeting"),
+    "tagError": _("Error updating tags"),
+    "startError": _("Error starting transcription"),
+    "reprocessError": _("Error reprocessing"),
+    "transcriptionError": _("Transcription failed. Check the server logs."),
+    "saved": _("Changes saved"),
+    "saveError": _("Error saving changes"),
+    "generating": _("Generating..."),
+} | tojson }};
+
+async function postJSON(url, body) {
+    const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    let data = {};
+    try { data = await r.json(); } catch (e) { /* not JSON */ }
+    if (!r.ok) throw new Error(data.error || r.statusText);
+    return data;
+}
+
+function renderTags() {
+    const container = document.getElementById('tagsContainer');
+    container.replaceChildren();
+    MEETING.tags.forEach(tag => {
+        const span = document.createElement('span');
+        span.className = `tag tag-color-${getTagColor(tag)}`;
+        span.append(document.createTextNode(tag));
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-close btn-close-white ms-2';
+        btn.addEventListener('click', () => removeMeetingTag(tag));
+        span.appendChild(btn);
+        container.appendChild(span);
+    });
+}
+
+async function saveTags(tags) {
+    try {
+        const data = await postJSON(MEETING.urls.tags, { tags });
+        MEETING.tags = data.tags;
+        renderTags();
+    } catch (e) {
+        showToast(e.message || MSG.tagError, 'error');
+    }
+}
+
+function addTag() {
+    const input = document.getElementById('newTag');
+    const tag = input.value.trim();
+    if (!tag) return;
+    input.value = '';
+    saveTags([...MEETING.tags, tag]);
+}
+
+function removeMeetingTag(tag) {
+    saveTags(MEETING.tags.filter(t => t !== tag));
+}
+
+async function deleteMeeting() {
+    if (!confirm(MSG.confirmDelete)) return;
+    try {
+        await postJSON(MEETING.urls.del);
+        window.location.href = MEETING.urls.index;
+    } catch (e) {
+        showToast(e.message || MSG.deleteError, 'error');
+    }
+}
+
+async function startTranscription() {
+    try {
+        await postJSON(MEETING.urls.transcribe);
+        window.location.reload();
+    } catch (e) {
+        showToast(e.message || MSG.startError, 'error');
+    }
+}
+
+function reprocessSummary() {
+    new bootstrap.Modal(document.getElementById('reprocessSummaryModal')).show();
+}
+
+async function confirmReprocessSummary() {
+    try {
+        await postJSON(MEETING.urls.reprocessSummary, { model: document.getElementById('summaryModel').value });
+        window.location.reload();
+    } catch (e) {
+        showToast(e.message || MSG.reprocessError, 'error');
+    }
+}
+
+function reprocessTranscription() {
+    new bootstrap.Modal(document.getElementById('reprocessTranscriptionModal')).show();
+}
+
+async function confirmReprocessTranscription() {
+    try {
+        await postJSON(MEETING.urls.reprocessTranscription, {
+            model: document.getElementById('reprocessModel').value,
+            language: document.getElementById('reprocessLanguage').value,
+        });
+        window.location.reload();
+    } catch (e) {
+        showToast(e.message || MSG.reprocessError, 'error');
+    }
+}
+
+async function generateLang(lang, btn) {
+    btn.disabled = true;
+    btn.textContent = MSG.generating;
+    try {
+        await postJSON(`${MEETING.urls.summary}/${lang}`);
+        localStorage.setItem('summaryLang', lang);
+        window.location.reload();
+    } catch (e) {
+        showToast(e.message || MSG.reprocessError, 'error');
+        btn.disabled = false;
+    }
+}
+
+// Poll while the meeting is being processed, then reload.
+if (MEETING.processing) {
+    const timer = setInterval(async () => {
+        try {
+            const r = await fetch(MEETING.urls.status);
+            const data = await r.json();
+            if (data.status === 'completed') {
+                clearInterval(timer);
+                window.location.reload();
+            } else if (data.status === 'error') {
+                clearInterval(timer);
+                showToast(data.error || MSG.transcriptionError, 'error');
+                setTimeout(() => window.location.reload(), 2500);
+            }
+        } catch (e) { /* transient network error: keep polling */ }
+    }, 5000);
+}
+
+function editTranscription() {
+    document.getElementById('transcription-content').classList.add('d-none');
+    document.getElementById('transcription-edit').classList.remove('d-none');
+}
+
+function cancelEdit() {
+    document.getElementById('transcription-content').classList.remove('d-none');
+    document.getElementById('transcription-edit').classList.add('d-none');
+}
+
+async function saveTranscription() {
+    try {
+        const data = await postJSON(MEETING.urls.transcription,
+                                    { transcription: document.getElementById('transcription-text').value });
+        document.getElementById('transcription-content').innerHTML = data.formatted_transcription;
+        cancelEdit();
+        showToast(MSG.saved, 'success');
+    } catch (e) {
+        showToast(e.message || MSG.saveError, 'error');
+    }
+}
+
+let currentLang = {{ summary_lang | tojson }};
+try { currentLang = localStorage.getItem('summaryLang') || currentLang; localStorage.removeItem('summaryLang'); } catch (e) { /* storage unavailable */ }
+
+function switchLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.summary-lang').forEach(el => {
+        el.style.display = el.id === `summary-${lang}` ? '' : 'none';
+    });
+    ['en', 'es'].forEach(code => {
+        document.getElementById(`btn-lang-${code}`).className =
+            code === lang ? 'btn btn-primary' : 'btn btn-outline-primary';
+    });
+}
+switchLang(currentLang);
+
+function editSummary() {
+    document.getElementById('summary-text').value = MEETING.summaries[currentLang] || '';
+    document.getElementById('summary-content').classList.add('d-none');
+    document.getElementById('summary-edit').classList.remove('d-none');
+}
+
+function cancelSummaryEdit() {
+    document.getElementById('summary-content').classList.remove('d-none');
+    document.getElementById('summary-edit').classList.add('d-none');
+}
+
+async function saveSummary() {
+    const text = document.getElementById('summary-text').value;
+    try {
+        const data = await postJSON(MEETING.urls.summary, { summary: text, lang: currentLang });
+        MEETING.summaries[currentLang] = text;
+        document.getElementById(`summary-${currentLang}`).innerHTML = data.formatted_summary;
+        cancelSummaryEdit();
+        showToast(MSG.saved, 'success');
+    } catch (e) {
+        showToast(e.message || MSG.saveError, 'error');
+    }
+}
+</script>
+{% endblock %}
